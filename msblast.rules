@@ -1,0 +1,43 @@
+# https://lists.sans.org/pipermail/list/2003-August/009711.html
+
+alert tcp $EXTERNAL_NET any -> $HOME_NET 135 (msg:"NETBIOS DCERPC ISystemActivator bind attempt"; flow:to_server,established; content:"|05|"; \
+distance:0; within:1; content:"|0b|"; distance:1; within:1; byte_test:1,&,1,0,relative; content:"|A0 01 00 00 00 00 00 00 C0 00 00 00 00 \
+00 00 46|"; distance:29; within:16; reference:cve,CAN-2003-0352; classtype:attempted-admin; sid:2192; rev:1;)
+
+alert tcp $EXTERNAL_NET any -> $HOME_NET 445 (msg:"NETBIOS SMB DCERPC ISystemActivator bind attempt"; flow:to_server,established; \
+content:"|FF|SMB|25|"; nocase; offset:4; depth:5; content:"|26 00|"; distance:56; within:2; content:"|5c 00|P|00|I|00|P|00|E|00 5c 00|"; nocase; \
+distance:5; within:12; content:"|05|"; distance:0; within:1; content:"|0b|"; distance:1; within:1; byte_test:1,&,1,0,relative; \
+content:"|A0 01 00 00 00 00 00 00 C0 00 00 00 00 00 00 46|"; distance:29; within:16; reference:cve,CAN-2003-0352; classtype:attempted-admin; sid:2193; rev:1;)
+
+# The following signatures are customized signatures designed to look for the most prevalent of the exploit tools and have been tested and known to alert when the exploit traffic is detected:
+
+alert tcp any any -> any 135:139 (msg:"Possible dcom*.c EXPLOIT ATTEMPT to 135-139"; content:"|05 00 0B 03 10 00 00 00 48 00 00 00 7F 00 00 00 D0 16 D0 \
+16 00 00 00 00 01 00 00 00 01 00 01 00 A0 01 00 00 00 00 00 00 C0 00 00 00 00 00 00 46 00 00 00 00 04 5D 88 8A EB 1C C9 11 9F E8 08 00 2B 10 48 60 02 \
+00 00 00|"; reference:URL,www.microsoft.com/security/security_bulletins/ms03-026.asp; reference:cve,CAN-2003-0352; classtype:attempted-admin; sid:1101000; rev:1;)
+
+alert tcp any any -> any 445 (msg:"Possible dcom*.c EXPLOIT ATTEMPT to 445"; content:"|05 00 0B 03 10 00 00 00 48 00 00 00 7F 00 00 00 D0 16 D0 16 \
+00 00 00 00 01 00 00 00 01 00 01 00 A0 01 00 00 00 00 00 00 C0 00 00 00 00 00 00 46 00 00 00 00 04 5D 88 8A EB 1C C9 11 9F E8 08 00 2B 10 48 60 02 00 \
+00 00|"; reference:URL,www.microsoft.com/security/security_bulletins/ms03-026.asp; reference:cve,CAN-2003-0352; classtype:attempted-admin; sid:1101001; rev:1;)
+
+# Below are several customized signatures for multiple versions of Windows. Please note, these have NOT been validated by Counterpane in any way:
+
+alert tcp any any -> any 135 (msg:"DCOM Exploit (MS03-026) targeting Windows 2000 SP0"; content:"|74 16 e8 77 cc e0 fd 7f cc e0 fd 7f|"; \
+classtype:attempted-admin; sid:1100001; reference:URL,www.microsoft.com/security/security_bulletins/ms03-026.asp; reference:URL,jackhammer.org/rules/1100001; rev:1;)
+
+alert tcp any any -> any 135 (msg:"DCOM Exploit (MS03-026) targeting Windows 2000 SP1"; content:"|ec 29 e8 77 cc e0 fd 7f cc e0 fd 7f|"; \
+classtype:attempted-admin; sid:1100002; reference:URL,www.microsoft.com/security/security_bulletins/ms03-026.asp; reference:URL,jackhammer.org/rules/1100002; rev:1;)
+
+alert tcp any any -> any 135 (msg:"DCOM Exploit (MS03-026) targeting Windows 2000 SP2"; content:"|b5 24 e8 77 cc e0 fd 7f cc e0 fd 7f|"; \
+classtype:attempted-admin; sid:1100003; reference:URL,www.microsoft.com/security/security_bulletins/ms03-026.asp; reference:URL,jackhammer.org/rules/1100003; rev:1;)
+
+alert tcp any any -> any 135 (msg:"DCOM Exploit (MS03-026) targeting Windows 2000 SP3"; content:"|7a 36 e8 77 cc e0 fd 7f cc e0 fd 7f|"; \
+classtype:attempted-admin; sid:1100004; reference:URL,www.microsoft.com/security/security_bulletins/ms03-026.asp; reference:URL,jackhammer.org/rules/1100004; rev:1;) 
+
+alert tcp any any -> any 135 (msg:"DCOM Exploit (MS03-026) targeting Windows 2000 SP4"; content:"|9b 2a f9 77 cc e0 fd 7f cc e0 fd 7f|"; \ 
+classtype:attempted-admin; sid:1100005; reference:URL,www.microsoft.com/security/security_bulletins/ms03-026.asp; reference:URL,jackhammer.org/rules/1100005; rev:1;)
+
+alert tcp any any -> any 135 (msg:"DCOM Exploit (MS03-026) targeting Windows XP SP0"; content:"|e3 af e9 77 cc e0 fd 7f cc e0 fd 7f|"; \
+classtype:attempted-admin; sid:1100006; reference:URL,www.microsoft.com/security/security_bulletins/ms03-026.asp; reference:URL,jackhammer.org/rules/1100006; rev:1;)
+
+alert tcp any any -> any 135 (msg:"DCOM Exploit (MS03-026) targeting Windows XP SP1"; content:"|BA 26 E6 77 CC E0 FD 7F CC E0 FD 7F|"; \
+classtype:attempted-admin; sid:1100007; reference:URL,www.microsoft.com/security/security_bulletins/ms03-026.asp; reference:URL,jackhammer.org/rules/1100007; rev:1;)
